@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>USPTO Patent Activity · U.S. Innovation Geography 2015</title>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F5F0;--bg2:#FFFFFF;--bg3:#F0EDE6;
+  --ink:#1A1612;--ink2:#3D3530;--muted:#7A7268;--muted2:#AEA89E;
+  --border:#DDD8CE;--border2:#C8C2B6;
+  --navy:#0F2557;--navy2:#1A3A8C;--navy3:#2D5BE3;
+  --gold:#C8870A;--gold2:#F0A820;--gold3:#FFC84A;
+  --red:#C0392B;--green:#1A7A4A;
+  --serif:'Libre Baskerville',Georgia,serif;
+  --sans:'IBM Plex Sans',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden}
+
+/* subtle paper texture */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.025'/%3E%3C/svg%3E");pointer-events:none;z-index:9999}
+
+/* HEADER */
+header{background:var(--navy);color:white;padding:0;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--gold2) 0%,var(--gold3) 40%,var(--navy3) 100%)}
+header::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;background:var(--gold2)}
+.h-inner{max-width:1280px;margin:0 auto;padding:56px 64px 52px;display:grid;grid-template-columns:1fr auto;gap:40px;align-items:end}
+.h-left{}
+.h-tag{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold2);margin-bottom:16px;opacity:.9}
+h1{font-family:var(--serif);font-size:clamp(30px,4.5vw,58px);line-height:1.05;margin-bottom:16px;font-weight:700}
+h1 span{color:var(--gold2)}
+.h-desc{font-size:14px;color:rgba(255,255,255,.62);max-width:520px;line-height:1.75}
+.h-right{text-align:right;flex-shrink:0}
+.h-vol{font-family:var(--serif);font-size:11px;color:rgba(255,255,255,.4);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase}
+.h-date{font-family:var(--mono);font-size:13px;color:var(--gold2)}
+
+/* NAV */
+nav{background:var(--navy);border-bottom:2px solid var(--gold2);position:sticky;top:0;z-index:100}
+.n-inner{max-width:1280px;margin:0 auto;padding:0 64px;display:flex;overflow-x:auto}
+.nb{padding:14px 20px;border:none;background:none;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:500;color:rgba(255,255,255,.45);letter-spacing:.5px;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;text-transform:uppercase}
+.nb:hover{color:var(--gold2)}
+.nb.active{color:var(--gold2);border-bottom-color:var(--gold2)}
+
+/* MAIN */
+main{max-width:1280px;margin:0 auto;padding:48px 64px}
+.panel{display:none}
+.panel.active{display:block;animation:fu .3s ease}
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* SECTION */
+.sh{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.sl{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.st{font-family:var(--serif);font-size:28px;color:var(--ink);margin-bottom:8px;font-weight:700}
+.ss{font-size:14px;color:var(--muted);line-height:1.7;max-width:640px}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:28px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.ct{font-family:var(--serif);font-size:18px;color:var(--ink);margin-bottom:4px;font-weight:700}
+.cs{font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+
+/* STAT ROW */
+.stats-row{display:flex;gap:0;margin-bottom:32px;border:1px solid var(--border);border-radius:4px;overflow:hidden;background:var(--bg2)}
+.stat-cell{flex:1;padding:20px 24px;border-right:1px solid var(--border);position:relative}
+.stat-cell:last-child{border-right:none}
+.stat-cell::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--navy)}
+.stat-n{font-family:var(--serif);font-size:28px;font-weight:700;color:var(--navy);line-height:1;margin-bottom:4px}
+.stat-l{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.stat-sub{font-size:11px;color:var(--muted2);margin-top:3px}
+
+/* TOGGLE */
+.toggle{display:flex;gap:0;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:3px;width:fit-content;margin-bottom:20px}
+.tg{padding:8px 18px;border:none;background:none;cursor:pointer;font-family:var(--mono);font-size:11px;font-weight:500;color:var(--muted);border-radius:3px;transition:all .2s;letter-spacing:.5px;text-transform:uppercase}
+.tg.active{background:var(--navy);color:var(--gold2)}
+
+/* INSIGHT GRID */
+.ig{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0;margin-top:0;border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.ins{background:var(--bg2);padding:20px 24px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);position:relative}
+.ins::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--gold2)}
+.ins-h{font-family:var(--sans);font-size:12px;font-weight:600;color:var(--navy);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.ins p{font-size:12px;color:var(--muted);line-height:1.6}
+
+/* TABLE */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{padding:10px 14px;text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--navy);background:var(--bg3);white-space:nowrap}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--ink2)}
+tbody tr:hover{background:var(--bg3)}
+tbody tr:nth-child(even){background:rgba(247,245,240,.5)}
+.tn{font-family:var(--serif);font-size:18px;color:var(--navy);font-weight:700}
+.bd{display:inline-block;padding:2px 8px;border-radius:2px;font-family:var(--mono);font-size:10px;font-weight:700;margin-right:2px}
+
+/* KEY NUMBER CALLOUT */
+.kn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:28px}
+.kn{background:var(--bg2);padding:20px 24px}
+.kn-num{font-family:var(--serif);font-size:34px;color:var(--navy);font-weight:700;line-height:1;margin-bottom:4px}
+.kn-label{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.kn-sub{font-size:11px;color:var(--muted2)}
+
+/* FOOTNOTE */
+.fn{font-family:var(--mono);font-size:10px;color:var(--muted2);line-height:1.6;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;margin-top:16px}
+.fn strong{color:var(--muted)}
+
+footer{border-top:2px solid var(--navy);padding:24px 64px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;background:var(--bg2)}
+.fl{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.fl strong{color:var(--navy)}
+.fr{font-family:var(--mono);font-size:10px;color:var(--muted2)}
+
+@media(max-width:768px){
+  header .h-inner,main,footer{padding-left:20px;padding-right:20px}
+  .n-inner{padding:0 8px}
+  .h-inner{grid-template-columns:1fr}
+  .h-right{display:none}
+  h1{font-size:28px}
+  .stats-row{flex-wrap:wrap}
+  .stat-cell{min-width:50%}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-inner">
+    <div class="h-left">
+      <div class="h-tag">Data Visualization · Northeastern University · GeoPandas · Matplotlib · Plotly</div>
+      <h1>USPTO Patent Activity<br><span>U.S. Innovation Geography</span> — 2015</h1>
+      <p class="h-desc">A choropleth analysis of utility patent grants across all 50 U.S. states. Built by spatially merging USPTO CBSA bulk data onto Census TIGER/Line boundaries via GeoPandas. Key finding: raw patent counts and per-capita rates reveal entirely different geographies of innovation.</p>
+    </div>
+    <div class="h-right">
+      <div class="h-vol">Analysis</div>
+      <div class="h-date">Hetvi Chavda<br>Northeastern University<br>MS Data Analytics Engineering</div>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="n-inner">
+    <button class="nb active" onclick="go('map',this)">Choropleth</button>
+    <button class="nb" onclick="go('ranking',this)">Rankings</button>
+    <button class="nb" onclick="go('metro',this)">Metro Areas</button>
+    <button class="nb" onclick="go('findings',this)">Findings</button>
+    <button class="nb" onclick="go('data',this)">Full Data</button>
+  </div>
+</nav>
+
+<main>
+
+<!-- MAP -->
+<div class="panel active" id="p-map">
+  <div class="sh">
+    <div class="sl">Figure 1</div>
+    <h2 class="st">Choropleth Map — U.S. Patent Grants by State</h2>
+    <p class="ss">Toggle between total patent volume and per-capita rate. The two views tell fundamentally different stories about where innovation is concentrated in America.</p>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-cell"><div class="stat-n">140,921</div><div class="stat-l">Total Patents Mapped</div><div class="stat-sub">Utility grants, 2015</div></div>
+    <div class="stat-cell"><div class="stat-n">CA</div><div class="stat-l">Leads — Raw Count</div><div class="stat-sub">40,134 patents</div></div>
+    <div class="stat-cell"><div class="stat-n">DC</div><div class="stat-l">Leads — Per Capita</div><div class="stat-sub">343.6 per 100,000</div></div>
+    <div class="stat-cell"><div class="stat-n">51</div><div class="stat-l">States + DC Mapped</div><div class="stat-sub">Census TIGER/Line boundaries</div></div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Select View</div>
+    <div class="cs">Raw counts favour large-population states. Per-capita normalisation reveals innovation density — a more meaningful measure for cross-state comparison.</div>
+    <div class="toggle">
+      <button class="tg active" id="tg-raw" onclick="switchMap('raw',this)">Raw Count</button>
+      <button class="tg" id="tg-pc" onclick="switchMap('pc',this)">Per 100,000 People</button>
+    </div>
+    <div style="background:#1A1C2E;border-radius:6px;padding:8px;margin-top:4px">
+  <div id="ch-map"></div>
+</div>
+    <div class="fn"><strong>Note:</strong> Patents attributed to primary state via MSA name string parsing from USPTO CBSA bulk files. Multi-state metros assigned to first-listed state. State boundary polygons from Census TIGER/Line (tl_2020_us_state.shp), loaded and reprojected via GeoPandas (EPSG:4326). Static Matplotlib choropleth also produced using Albers Equal Area projection (EPSG:5070).</div>
+  </div>
+</div>
+
+<!-- RANKINGS -->
+<div class="panel" id="p-ranking">
+  <div class="sh">
+    <div class="sl">Figure 2 & 3</div>
+    <h2 class="st">State Rankings — Raw vs. Per Capita</h2>
+    <p class="ss">The contrast between these two rankings is the central analytical finding of this project. California disappears from the per-capita top 10; DC, Vermont, and Washington rise dramatically.</p>
+  </div>
+  <div class="card"><div class="ct">Top 25 States — Total Patent Grants (2015)</div><div class="cs">Absolute volume. Reflects both innovation output and population size.</div><div id="ch-raw"></div></div>
+  <div class="card"><div class="ct">Top 25 States — Patents per 100,000 Residents</div><div class="cs">Population-normalised rate. Reveals true innovation density independent of state size.</div><div id="ch-pc"></div></div>
+</div>
+
+<!-- METRO -->
+<div class="panel" id="p-metro">
+  <div class="sh">
+    <div class="sl">Figure 4</div>
+    <h2 class="st">Top 15 Metropolitan Areas</h2>
+    <p class="ss">Metro-level breakdown from USPTO CBSA data. The San Jose metro area alone produced more patents than most states — a striking concentration of innovation in a single geography.</p>
+  </div>
+  <div class="kn-grid">
+    <div class="kn"><div class="kn-num">14,618</div><div class="kn-label">San Jose Metro</div><div class="kn-sub">#1 nationwide — Silicon Valley</div></div>
+    <div class="kn"><div class="kn-num">9,732</div><div class="kn-label">San Francisco Metro</div><div class="kn-sub">#2 — Bay Area</div></div>
+    <div class="kn"><div class="kn-num">5,949</div><div class="kn-label">Boston-Cambridge</div><div class="kn-sub">#5 — Route 128 corridor</div></div>
+    <div class="kn"><div class="kn-num">3,419</div><div class="kn-label">Minneapolis Metro</div><div class="kn-sub">#9 — Medical devices & tech</div></div>
+  </div>
+  <div class="card"><div class="ct">Patent Grants by Metro Area (CBSA) — 2015</div><div class="cs">Top 15 metropolitan statistical areas. Source: USPTO CBSA bulk patent grant files.</div><div id="ch-metro"></div></div>
+</div>
+
+<!-- FINDINGS -->
+<div class="panel" id="p-findings">
+  <div class="sh">
+    <div class="sl">Discussion</div>
+    <h2 class="st">Key Findings & Methodology</h2>
+    <p class="ss">The analysis reveals that the conventional narrative of California patent dominance is a product of population size as much as innovation intensity.</p>
+  </div>
+  <div class="ig">
+    <div class="ins"><div class="ins-h">Coastal Concentration</div><p>CA, NY, WA, MA, and OR account for the majority of raw output — reflecting concentration of tech, pharma, and biotech industries in coastal metro areas.</p></div>
+    <div class="ins"><div class="ins-h">Per Capita Surprises</div><p>DC (343.6 per 100K) leads by a substantial margin, followed by WA (85.6), MA (100.8), and VT (69.5). Small, innovation-dense geographies rise dramatically when normalised.</p></div>
+    <div class="ins"><div class="ins-h">Midwest Manufacturing</div><p>Michigan (55.9), Minnesota (80.9), and Wisconsin (33.5) show strong per-capita performance driven by automotive, medical device, and industrial manufacturing innovation.</p></div>
+    <div class="ins"><div class="ins-h">Boston's Strength</div><p>The Boston-Cambridge metro (5,949 grants) ranks 5th nationally. Massachusetts ranks top-3 per capita, anchored by biotech and pharmaceutical R&D in the Route 128 corridor.</p></div>
+    <div class="ins"><div class="ins-h">Silicon Valley Gap</div><p>San Jose metro produced 14,618 patents — 1.5× San Francisco (9,732) and over 2× any non-California metro. The concentration of semiconductor and software IP is unmatched nationally.</p></div>
+    <div class="ins"><div class="ins-h">Data Pipeline</div><p>USPTO CBSA bulk files parsed with custom Python logic. State extracted from MSA name string. Aggregated via pandas. Merged onto Census TIGER/Line boundaries with GeoPandas. Visualised with Matplotlib (static) and Plotly (interactive).</p></div>
+  </div>
+</div>
+
+<!-- DATA -->
+<div class="panel" id="p-data">
+  <div class="sh">
+    <div class="sl">Appendix A</div>
+    <h2 class="st">Full State-Level Dataset</h2>
+    <p class="ss">All 50 states and DC. Sorted by raw patent count. Rank columns show both raw and per-capita positions side by side to illustrate the ranking divergence.</p>
+  </div>
+  <div class="card">
+    <div class="tw">
+      <table>
+        <thead><tr><th>Raw #</th><th>State</th><th>Patents</th><th>Population</th><th>Per 100K</th><th>Raw Rank</th><th>Per Capita Rank</th></tr></thead>
+        <tbody id="dtb"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <div class="fl">Built by <strong>Hetvi Chavda</strong> · MS Data Analytics Engineering · Northeastern University · Boston, MA</div>
+  <div class="fr">Data: USPTO Utility Patent Grants 2015 · Census TIGER/Line State Boundaries · Stack: Python · GeoPandas · Matplotlib · Plotly · Pandas</div>
+</footer>
+
+<script>
+const SD=[
+  {s:"CA",p:40134,pop:39144818,pc:102.5},{s:"NY",p:12244,pop:19795791,pc:61.9},
+  {s:"TX",p:9938,pop:27469114,pc:36.2},{s:"WA",p:6138,pop:7170351,pc:85.6},
+  {s:"MA",p:6846,pop:6794422,pc:100.8},{s:"MI",p:5550,pop:9922576,pc:55.9},
+  {s:"MN",p:4440,pop:5489594,pc:80.9},{s:"IL",p:4992,pop:12859995,pc:38.8},
+  {s:"PA",p:4439,pop:12802503,pc:34.7},{s:"FL",p:4057,pop:20271272,pc:20.0},
+  {s:"OH",p:3722,pop:11613423,pc:32.0},{s:"NC",p:3420,pop:10042802,pc:34.1},
+  {s:"CO",p:3049,pop:5456574,pc:55.9},{s:"OR",p:2622,pop:4028977,pc:65.1},
+  {s:"AZ",p:2540,pop:6828065,pc:37.2},{s:"GA",p:2481,pop:10214860,pc:24.3},
+  {s:"DC",p:2310,pop:672228,pc:343.6},{s:"CT",p:2161,pop:3590886,pc:60.2},
+  {s:"IN",p:1964,pop:6619680,pc:29.7},{s:"MO",p:1793,pop:6083672,pc:29.5},
+  {s:"WI",p:1931,pop:5771337,pc:33.5},{s:"UT",p:1405,pop:2995919,pc:46.9},
+  {s:"TN",p:1055,pop:6600299,pc:16.0},{s:"IA",p:1048,pop:3123899,pc:33.5},
+  {s:"MD",p:905,pop:6006401,pc:15.1},{s:"VA",p:801,pop:8382993,pc:9.6},
+  {s:"SC",p:868,pop:4896146,pc:17.7},{s:"ID",p:864,pop:1654930,pc:52.2},
+  {s:"NV",p:725,pop:2890845,pc:25.1},{s:"NH",p:630,pop:1330608,pc:47.3},
+  {s:"KY",p:559,pop:4425092,pc:12.6},{s:"NJ",p:567,pop:8958013,pc:6.3},
+  {s:"OK",p:532,pop:3911338,pc:13.6},{s:"RI",p:496,pop:1056298,pc:47.0},
+  {s:"AL",p:474,pop:4858979,pc:9.8},{s:"VT",p:435,pop:626042,pc:69.5},
+  {s:"NM",p:427,pop:2085109,pc:20.5},{s:"LA",p:400,pop:4670724,pc:8.6},
+  {s:"KS",p:289,pop:2911641,pc:9.9},{s:"AR",p:238,pop:2978204,pc:8.0},
+  {s:"ME",p:201,pop:1329328,pc:15.1},{s:"ND",p:140,pop:756927,pc:18.5},
+  {s:"MT",p:142,pop:1032949,pc:13.7},{s:"HI",p:127,pop:1431603,pc:8.9},
+  {s:"WV",p:123,pop:1844128,pc:6.7},{s:"MS",p:112,pop:2992333,pc:3.7},
+  {s:"WY",p:112,pop:586107,pc:19.1},{s:"NE",p:319,pop:1896190,pc:16.8},
+  {s:"SD",p:99,pop:858469,pc:11.5},{s:"AK",p:41,pop:738432,pc:5.6},
+  {s:"DE",p:16,pop:945934,pc:1.7},
+];
+const METROS=[
+  {m:"San Jose-Sunnyvale-Santa Clara, CA",p:14618},
+  {m:"San Francisco-Oakland-Fremont, CA",p:9732},
+  {m:"New York-N. New Jersey-Long Island, NY-NJ-PA",p:7754},
+  {m:"Los Angeles-Long Beach-Santa Ana, CA",p:6476},
+  {m:"Boston-Cambridge-Quincy, MA-NH",p:5949},
+  {m:"San Diego-Carlsbad-San Marcos, CA",p:5460},
+  {m:"Seattle-Tacoma-Bellevue, WA",p:4739},
+  {m:"Chicago-Joliet-Naperville, IL-IN-WI",p:3909},
+  {m:"Minneapolis-St. Paul-Bloomington, MN-WI",p:3419},
+  {m:"Detroit-Warren-Livonia, MI",p:3305},
+  {m:"Houston-Sugar Land-Baytown, TX",p:3186},
+  {m:"Dallas-Fort Worth-Arlington, TX",p:3026},
+  {m:"Austin-Round Rock-San Marcos, TX",p:2700},
+  {m:"Philadelphia-Camden-Wilmington, PA-NJ-DE-MD",p:2357},
+  {m:"Portland-Vancouver-Hillsboro, OR-WA",p:2163},
+];
+
+// Plotly light theme
+const PT={
+  paper_bgcolor:'rgba(0,0,0,0)',
+  plot_bgcolor:'rgba(0,0,0,0)',
+  font:{family:'IBM Plex Sans,sans-serif',color:'#7A7268',size:12},
+  margin:{l:10,r:10,t:10,b:40}
+};
+const GR={showgrid:true,gridcolor:'#E8E3DA',zerolinecolor:'#C8C2B6'};
+
+function go(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('p-'+id).classList.add('active');
+  btn.classList.add('active');
+  ({map:bMap,ranking:bRanking,metro:bMetro,findings:()=>{},data:bData})[id]?.();
+}
+
+// MAP
+let mMode='raw';
+function bMap(){switchMap('raw',document.getElementById('tg-raw'));}
+function switchMap(mode,btn){
+  mMode=mode;
+  document.querySelectorAll('.tg').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const isPC=mode==='pc';
+  const z=isPC?SD.map(d=>d.pc):SD.map(d=>d.p);
+  const cs=isPC
+    ?[[0,'#FDE8F0'],[0.25,'#F9A8C9'],[0.5,'#F06292'],[0.75,'#C2185B'],[1,'#880E4F']]
+    :[[0,'#E3F2FD'],[0.25,'#90CAF9'],[0.5,'#42A5F5'],[0.75,'#1565C0'],[1,'#0D2137']];
+  const bar=isPC?'Per 100,000 People':'Patent Count';
+  Plotly.newPlot('ch-map',[{
+    type:'choropleth',locationmode:'USA-states',
+    locations:SD.map(d=>d.s),z:z,
+    hovertemplate:SD.map(d=>`<b>${d.s}</b><br>Total Patents: ${d.p.toLocaleString()}<br>Per 100K: ${d.pc}<br>Population: ${d.pop.toLocaleString()}<extra></extra>`),
+    hoverinfo:'text',
+    colorscale:cs,
+    colorbar:{title:{text:bar,font:{color:'#7A7268',size:11,family:'IBM Plex Mono'}},tickfont:{color:'#7A7268',size:10,family:'IBM Plex Mono'},bgcolor:'rgba(0,0,0,0)',bordercolor:'#DDD8CE',borderwidth:1},
+    marker:{line:{color:'#F7F5F0',width:1.5}}
+  }],{...PT,height:480,
+geo:{scope:'usa',
+  showland:true, landcolor:'#2A2825',
+  showocean:true, oceancolor:'#1A1C2E',
+  showcoastlines:true, coastlinecolor:'#4A4540',
+  showframe:false,
+  bgcolor:'#1A1C2E',
+  subunitcolor:'#3A3530',
+  lakecolor:'#1A1C2E'
+},
+    margin:{l:0,r:0,t:10,b:0}
+  },{responsive:true});
+}
+
+// RANKINGS
+function bRanking(){
+  const byRaw=[...SD].sort((a,b)=>b.p-a.p).slice(0,25).sort((a,b)=>a.p-b.p);
+  const byPC=[...SD].sort((a,b)=>b.pc-a.pc).slice(0,25).sort((a,b)=>a.pc-b.pc);
+
+  const navyScale=(vals)=>vals.map((v,i,a)=>{
+    const t=i/(a.length-1);
+    const r=Math.round(15+(t*(200-15)));
+    const g=Math.round(37+(t*(180-37)));
+    const b=Math.round(87+(t*(224-87)));
+    return `rgb(${r},${g},${b})`;
+  });
+  const goldScale=(vals)=>vals.map((v,i,a)=>{
+    const t=i/(a.length-1);
+    return t>0.8?'#C8870A':t>0.6?'#1A3A8C':t>0.3?'#2D5BE3':'#7DB3E8';
+  });
+
+  Plotly.newPlot('ch-raw',[{
+    type:'bar',orientation:'h',
+    x:byRaw.map(d=>d.p),y:byRaw.map(d=>d.s),
+    marker:{color:navyScale(byRaw.map(d=>d.p)),line:{width:0}},
+    text:byRaw.map(d=>d.p.toLocaleString()),textposition:'outside',
+    textfont:{color:'#7A7268',size:11,family:'IBM Plex Mono'},
+    hovertemplate:'<b>%{y}</b><br>Patents: %{x:,}<extra></extra>'
+  }],{...PT,height:540,
+    xaxis:{...GR,tickformat:',',title:'Total Patent Grants',titlefont:{color:'#7A7268'}},
+    yaxis:{showgrid:false,tickfont:{size:12,color:'#3D3530',family:'IBM Plex Mono'}},
+    margin:{l:40,r:90,t:10,b:50}
+  },{responsive:true});
+
+  Plotly.newPlot('ch-pc',[{
+    type:'bar',orientation:'h',
+    x:byPC.map(d=>d.pc),y:byPC.map(d=>d.s),
+    marker:{color:goldScale(byPC.map(d=>d.pc)),line:{width:0}},
+    text:byPC.map(d=>d.pc.toFixed(1)),textposition:'outside',
+    textfont:{color:'#7A7268',size:11,family:'IBM Plex Mono'},
+    hovertemplate:'<b>%{y}</b><br>Per 100K: %{x:.1f}<extra></extra>'
+  }],{...PT,height:540,
+    xaxis:{...GR,title:'Patents per 100,000 People',titlefont:{color:'#7A7268'}},
+    yaxis:{showgrid:false,tickfont:{size:12,color:'#3D3530',family:'IBM Plex Mono'}},
+    margin:{l:40,r:70,t:10,b:50}
+  },{responsive:true});
+}
+
+// METRO
+function bMetro(){
+  const s=[...METROS].sort((a,b)=>a.p-b.p);
+  const short=s.map(d=>d.m.split(',')[0]);
+  const colors=s.map((d,i)=>i===s.length-1?'#C8870A':i>=s.length-3?'#0F2557':i>=s.length-7?'#1A3A8C':'#7DB3E8');
+  Plotly.newPlot('ch-metro',[{
+    type:'bar',orientation:'h',
+    x:s.map(d=>d.p),y:short,
+    marker:{color:colors,line:{width:0}},
+    text:s.map(d=>d.p.toLocaleString()),textposition:'outside',
+    textfont:{color:'#7A7268',size:11,family:'IBM Plex Mono'},
+    customdata:s.map(d=>d.m),
+    hovertemplate:'<b>%{customdata}</b><br>Patents: %{x:,}<extra></extra>'
+  }],{...PT,height:480,
+    xaxis:{...GR,tickformat:',',title:'Patent Grants (2015)',titlefont:{color:'#7A7268'}},
+    yaxis:{showgrid:false,tickfont:{size:11,color:'#3D3530'}},
+    margin:{l:10,r:90,t:10,b:50}
+  },{responsive:true});
+}
+
+// DATA
+function bData(){
+  const tb=document.getElementById('dtb');
+  if(tb.children.length) return;
+  const byRaw=[...SD].sort((a,b)=>b.p-a.p);
+  const pcRank={};
+  [...SD].sort((a,b)=>b.pc-a.pc).forEach((d,i)=>pcRank[d.s]=i+1);
+  byRaw.forEach((d,i)=>{
+    const rk=i+1,pc=pcRank[d.s];
+    const rawC=rk<=3?'#C8870A':rk<=10?'#0F2557':'#7A7268';
+    const pcC=pc<=3?'#C8870A':pc<=10?'#0F2557':'#7A7268';
+    tb.innerHTML+=`<tr>
+      <td><span class="tn">${rk}</span></td>
+      <td style="font-family:var(--mono);font-weight:600;font-size:14px">${d.s}</td>
+      <td style="font-family:var(--mono)">${d.p.toLocaleString()}</td>
+      <td style="font-family:var(--mono);color:var(--muted)">${d.pop.toLocaleString()}</td>
+      <td style="font-family:var(--mono)">${d.pc}</td>
+      <td><span class="bd" style="background:${rawC};color:white">#${rk}</span></td>
+      <td><span class="bd" style="background:${pcC};color:white">#${pc}</span></td>
+    </tr>`;
+  });
+}
+
+// INIT
+bMap();
+</script>
+</body>
+</html>
