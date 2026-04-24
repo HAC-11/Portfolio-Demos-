@@ -1,0 +1,25 @@
+# Geospatial Analytics Portfolio
+# Hetvi Chavda · Northeastern University
+#
+# Install: pip install -r requirements.txt
+
+# Core data
+pandas>=2.0.0
+openpyxl>=3.1.0
+numpy>=1.24.0
+
+# Geospatial
+geopandas>=0.13.0
+shapely>=2.0.0
+pyproj>=3.5.0
+
+# Visualisation
+plotly>=5.15.0
+matplotlib>=3.7.0
+
+# Census API
+requests>=2.28.0
+
+# Notebook
+jupyter>=1.0.0
+ipykernel>=6.0.0
