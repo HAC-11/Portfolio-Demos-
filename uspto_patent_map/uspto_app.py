@@ -227,7 +227,7 @@ with col1:
         hovertemplate="<b>%{y}</b><br>Patents: %{x:,}<extra></extra>"
     ))
     fig1 = apply_style(fig1, 540)
-    fig1.update_layout(title=dict(text="Raw Count", font=dict(color="#1A1612",size=14,family="Georgia,serif")),x=0)
+    fig1.update_layout(title_text="Raw Count")
     fig1.update_xaxes(showgrid=True, gridcolor="#E8E3DA", zerolinecolor="#C8C2B6", tickformat=",")
     fig1.update_yaxes(showgrid=False, tickfont=dict(size=11,color="#3D3530"))
     fig1.update_layout(margin=dict(l=40,r=80,t=40,b=40))
@@ -242,7 +242,7 @@ with col2:
         hovertemplate="<b>%{y}</b><br>Per 100K: %{x:.1f}<extra></extra>"
     ))
     fig2 = apply_style(fig2, 540)
-    fig2.update_layout(title=dict(text="Per 100,000 People", font=dict(color="#1A1612",size=14,family="Georgia,serif")),x=0)
+    fig2.update_layout(title_text="Per 100,000 People")
     fig2.update_xaxes(showgrid=True, gridcolor="#E8E3DA", zerolinecolor="#C8C2B6")
     fig2.update_yaxes(showgrid=False, tickfont=dict(size=11,color="#3D3530"))
     fig2.update_layout(margin=dict(l=40,r=60,t=40,b=40))
