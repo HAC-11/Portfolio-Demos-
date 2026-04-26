@@ -109,7 +109,7 @@ PLOTLY_BASE = dict(
 # ── DATA LOADING ─────────────────────────────────────────────────────────────
 @st.cache_data
 def load_data():
-    df = pd.read_excel("/Users/hetvichavda/Downloads/Middlesex_County_ZCTA_Analysis_Full.xlsx")
+    df = pd.read_excel("Middlesex_County_ZCTA_Analysis_Full.xlsx")
     df["ZCTA_str"]  = df["ZCTA"].astype(str).str.zfill(5)
     df["Town"]      = df["ZCTA_str"].map(ZCTA_TOWN_MAP).fillna("Middlesex County")
     df["Label"]     = df["Town"] + " (" + df["ZCTA_str"] + ")"
