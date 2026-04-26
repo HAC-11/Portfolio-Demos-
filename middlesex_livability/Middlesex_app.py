@@ -1,4 +1,6 @@
 """
+Middlesex County ZCTA Livability Dashboard
+Hetvi Chavda · MS Data Analytics Engineering · Northeastern University
 
 Run:
     streamlit run app.py
@@ -8,6 +10,7 @@ Files required (same folder):
     cb_2020_us_zcta520_500k/cb_2020_us_zcta520_500k.shp (+ .dbf .shx .prj .cpg)
 """
 
+import os
 import streamlit as st
 import pandas as pd
 import geopandas as gpd
@@ -15,12 +18,9 @@ import plotly.graph_objects as go
 import plotly.express as px
 import json
 import warnings
-import os
-import zipfile
-import urllib.request
 warnings.filterwarnings("ignore")
 
-# ── PAGE CONFIG 
+# ── PAGE CONFIG ──────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Middlesex County · ZCTA Livability",
     page_icon="",
@@ -44,7 +44,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ── CONSTANTS 
+# ── CONSTANTS ────────────────────────────────────────────────────────────────
 ZCTA_TOWN_MAP = {
     "01701":"Framingham","01702":"Framingham","01718":"Acton","01719":"Boxborough",
     "01720":"Acton","01721":"Ashland","01730":"Bedford","01731":"Hanscom AFB",
@@ -101,13 +101,7 @@ def hex_to_rgba(hex_color, opacity=0.13):
     r, g, b = int(h[0:2],16), int(h[2:4],16), int(h[4:6],16)
     return f"rgba({r},{g},{b},{opacity})"
 
-PLOTLY_BASE = dict(
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="sans-serif", color="#7a8a72", size=12),
-)
-
-# ── DATA LOADING 
+# ── DATA LOADING ─────────────────────────────────────────────────────────────
 @st.cache_data
 def load_data():
     df = pd.read_excel("middlesex_livability/Middlesex_County_ZCTA_Analysis_Full.xlsx")
@@ -125,15 +119,18 @@ def load_geodata(_df):
     spatial merge, and build GeoJSON for Plotly choropleth.
     Cached so the expensive operation runs only once.
     """
+    shp_path = "cb_2020_us_zcta520_500k/cb_2020_us_zcta520_500k.shp"
+    if not os.path.exists(shp_path):
+        import urllib.request, zipfile
+        with st.spinner("Downloading ZCTA boundaries..."):
+            urllib.request.urlretrieve(
+                "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_zcta520_500k.zip",
+                "cb_2020_us_zcta520_500k.zip"
+            )
+            with zipfile.ZipFile("cb_2020_us_zcta520_500k.zip", "r") as z:
+                z.extractall("cb_2020_us_zcta520_500k")
+            os.remove("cb_2020_us_zcta520_500k.zip")
     try:
-        shp_path = "cb_2020_us_zcta520_500k/cb_2020_us_zcta520_500k.shp"
-        if not os.path.exists(shp_path):
-            with st.spinner("Downloading ZCTA boundaries..."):
-                url = "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_zcta520_500k.zip"
-                urllib.request.urlretrieve(url, "cb_2020_us_zcta520_500k.zip")
-                with zipfile.ZipFile("cb_2020_us_zcta520_500k.zip", "r") as z:
-                    z.extractall("cb_2020_us_zcta520_500k")
-                os.remove("cb_2020_us_zcta520_500k.zip")
         gdf = gpd.read_file(shp_path)
         gdf = gdf.to_crs(epsg=4326)
         zctas = _df["ZCTA_str"].tolist()
@@ -159,11 +156,11 @@ def load_geodata(_df):
     except FileNotFoundError:
         return None, None
 
-# ── LOAD 
+# ── LOAD ─────────────────────────────────────────────────────────────────────
 df = load_data()
 merged_gdf, geojson = load_geodata(df)
 
-# ── SIDEBAR 
+# ── SIDEBAR ──────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## Middlesex County")
     st.markdown("---")
@@ -178,7 +175,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("**Hetvi Chavda**  \nNortheastern University")
 
-# ── HEADER 
+# ── HEADER ───────────────────────────────────────────────────────────────────
 st.markdown("""
 <div style="padding:28px 0 20px">
   <p style="font-family:monospace;font-size:10px;letter-spacing:3px;
@@ -203,6 +200,7 @@ c5.metric("Bottom ZCTA", bot["Town"])
 
 st.markdown("---")
 
+
 # PAGE: OVERVIEW
 
 if page == "Overview":
@@ -226,7 +224,9 @@ if page == "Overview":
         hovertemplate="<b>%{y}</b><br>Score: %{x:.1f}<extra></extra>"
     ))
     fig_bar.update_layout(
-        **PLOTLY_BASE,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(family='sans-serif', color='#7a8a72', size=12),
         height=max(700, len(df) * 14),
         xaxis=dict(range=[0,112], showgrid=True, gridcolor="#2a3025",
                    title="Composite Score (0–100)", titlefont=dict(color="#7a8a72")),
@@ -251,7 +251,9 @@ if page == "Overview":
     )
     fig_sc.update_traces(marker=dict(opacity=0.85, line=dict(width=0.5, color="white")))
     fig_sc.update_layout(
-        **PLOTLY_BASE,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(family='sans-serif', color='#7a8a72', size=12),
         height=460,
         xaxis=dict(showgrid=True, gridcolor="#2a3025",
                    tickprefix="$", tickformat=",.0f",
@@ -308,7 +310,6 @@ elif page == "Map":
     else:
         st.warning("Shapefile not found. Place `cb_2020_us_zcta520_500k/` in the same folder as app.py and restart.")
 
-
 # PAGE: COMPARE
 
 elif page == "Compare":
@@ -356,7 +357,9 @@ elif page == "Compare":
             name=d["Label"]
         ))
     fig_radar.update_layout(
-        **PLOTLY_BASE,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(family='sans-serif', color='#7a8a72', size=12),
         height=420,
         polar=dict(
             radialaxis=dict(visible=True, range=[0,100],
@@ -392,7 +395,6 @@ elif page == "Compare":
         table_data[d2["Town"]].append(fmt(d2[key]))
     st.dataframe(pd.DataFrame(table_data), use_container_width=True, hide_index=True)
 
-
 # PAGE: INDICATORS
 
 elif page == "Indicators":
@@ -422,7 +424,9 @@ elif page == "Indicators":
         hovertemplate="<b>%{y}</b><br>Score: %{x:.1f}<extra></extra>"
     ))
     fig_i.update_layout(
-        **PLOTLY_BASE,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(family='sans-serif', color='#7a8a72', size=12),
         height=max(700, len(df)*14),
         xaxis=dict(range=[0,115], showgrid=True, gridcolor="#2a3025",
                    title="Score (0–100)", titlefont=dict(color="#7a8a72")),
@@ -446,7 +450,9 @@ elif page == "Indicators":
             name=row["Label"]
         ))
     fig_r.update_layout(
-        **PLOTLY_BASE,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(family='sans-serif', color='#7a8a72', size=12),
         height=500,
         polar=dict(
             radialaxis=dict(visible=True, range=[0,100],
@@ -460,7 +466,7 @@ elif page == "Indicators":
     st.plotly_chart(fig_r, use_container_width=True)
 
 # PAGE: DATA
-# 
+
 elif page == "Data":
     st.subheader("Full Dataset")
     
