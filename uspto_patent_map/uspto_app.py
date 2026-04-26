@@ -130,7 +130,7 @@ def load_data():
 @st.cache_data
 def load_geo(_sp):
     try:
-        gdf = gpd.read_file("/Users/hetvichavda/Downloads/tl_2020_us_state/tl_2020_us_state.shp")
+        gdf = gpd.read_file("uspto_patent_map/tl_2020_us_state/tl_2020_us_state.shp")
         gdf = gdf.to_crs(epsg=4326)
         gdf = gdf[~gdf["STUSPS"].isin(["PR","VI","GU","MP","AS"])].copy()
         mg  = gdf.merge(_sp, left_on="STUSPS", right_on="State", how="left")
