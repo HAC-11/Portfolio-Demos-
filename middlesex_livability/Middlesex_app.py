@@ -200,9 +200,9 @@ c5.metric("Bottom ZCTA", bot["Town"])
 
 st.markdown("---")
 
-
+# ═══════════════════════════════════════════════════════════════
 # PAGE: OVERVIEW
-
+# ═══════════════════════════════════════════════════════════════
 if page == "Overview":
     st.subheader("Composite Livability Score")
 
@@ -224,9 +224,9 @@ if page == "Overview":
         hovertemplate="<b>%{y}</b><br>Score: %{x:.1f}<extra></extra>"
     ))
     fig_bar.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family='sans-serif', color='#7a8a72', size=12),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="sans-serif", color="#7a8a72", size=12),
         height=max(700, len(df) * 14),
         xaxis=dict(range=[0,112], showgrid=True, gridcolor="#2a3025",
                    title="Composite Score (0–100)", titlefont=dict(color="#7a8a72")),
@@ -251,9 +251,9 @@ if page == "Overview":
     )
     fig_sc.update_traces(marker=dict(opacity=0.85, line=dict(width=0.5, color="white")))
     fig_sc.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family='sans-serif', color='#7a8a72', size=12),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="sans-serif", color="#7a8a72", size=12),
         height=460,
         xaxis=dict(showgrid=True, gridcolor="#2a3025",
                    tickprefix="$", tickformat=",.0f",
@@ -264,8 +264,9 @@ if page == "Overview":
     )
     st.plotly_chart(fig_sc, use_container_width=True)
 
+# ═══════════════════════════════════════════════════════════════
 # PAGE: MAP
-
+# ═══════════════════════════════════════════════════════════════
 elif page == "Map":
     st.subheader("Geographic Distribution")
 
@@ -310,8 +311,9 @@ elif page == "Map":
     else:
         st.warning("Shapefile not found. Place `cb_2020_us_zcta520_500k/` in the same folder as app.py and restart.")
 
+# ═══════════════════════════════════════════════════════════════
 # PAGE: COMPARE
-
+# ═══════════════════════════════════════════════════════════════
 elif page == "Compare":
     st.subheader("Compare ZCTAs")
 
@@ -357,9 +359,9 @@ elif page == "Compare":
             name=d["Label"]
         ))
     fig_radar.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family='sans-serif', color='#7a8a72', size=12),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="sans-serif", color="#7a8a72", size=12),
         height=420,
         polar=dict(
             radialaxis=dict(visible=True, range=[0,100],
@@ -395,8 +397,9 @@ elif page == "Compare":
         table_data[d2["Town"]].append(fmt(d2[key]))
     st.dataframe(pd.DataFrame(table_data), use_container_width=True, hide_index=True)
 
+# ═══════════════════════════════════════════════════════════════
 # PAGE: INDICATORS
-
+# ═══════════════════════════════════════════════════════════════
 elif page == "Indicators":
     st.subheader("Indicators")
 
@@ -424,9 +427,9 @@ elif page == "Indicators":
         hovertemplate="<b>%{y}</b><br>Score: %{x:.1f}<extra></extra>"
     ))
     fig_i.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family='sans-serif', color='#7a8a72', size=12),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="sans-serif", color="#7a8a72", size=12),
         height=max(700, len(df)*14),
         xaxis=dict(range=[0,115], showgrid=True, gridcolor="#2a3025",
                    title="Score (0–100)", titlefont=dict(color="#7a8a72")),
@@ -450,9 +453,9 @@ elif page == "Indicators":
             name=row["Label"]
         ))
     fig_r.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family='sans-serif', color='#7a8a72', size=12),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="sans-serif", color="#7a8a72", size=12),
         height=500,
         polar=dict(
             radialaxis=dict(visible=True, range=[0,100],
@@ -465,8 +468,9 @@ elif page == "Indicators":
     )
     st.plotly_chart(fig_r, use_container_width=True)
 
+# ═══════════════════════════════════════════════════════════════
 # PAGE: DATA
-
+# ═══════════════════════════════════════════════════════════════
 elif page == "Data":
     st.subheader("Full Dataset")
     
