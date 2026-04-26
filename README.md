@@ -2,10 +2,7 @@
 # Geospatial Analytics Portfolio
 Hetvi Chavda — MS Data Analytics Engineering, Northeastern University
 
-A collection of interactive geospatial analytics dashboards that transform public data into insights about how people live, work, and innovate across regions.
-
-This repository showcases end-to-end data projects that combine public datasets, spatial joins, geographic boundaries, and interactive dashboards to turn raw location-based data into clear analytical insights.
-
+This repository brings together two geospatial analytics projects built in Python. One focuses on evaluating livability across ZIP codes in Middlesex County using socioeconomic data, while the other explores how innovation is distributed across the U.S. through patent activity. Both projects combine spatial data with public datasets and present the results through interactive Streamlit dashboards.
 
 ---
 
@@ -13,29 +10,28 @@ This repository showcases end-to-end data projects that combine public datasets,
 
 ### 1. Middlesex County ZCTA Livability Dashboard
 
-An interactive dashboard analyzing ZIP Code Tabulation Areas (ZCTAs) in and around Middlesex County, Massachusetts through a composite livability index.
+This dashboard evaluates all 100 ZIP Code Tabulation Areas in Middlesex County, MA using a composite livability index built from five ACS indicators:
 
-The index combines five indicators:
 - Median household income
 - Educational attainment
 - Median home value
 - Mean commute time
 - Population density
 
-Each ZCTA receives a normalized 0–100 score and a letter grade, enabling comparisons across multiple quality-of-life dimensions.
+Each ZCTA receives a normalized 0–100 score and letter grade.
 
-This project combines geospatial processing, feature normalization, and interactive visualization to explore regional differences in livability.
+---
 
 ![Geographic distribution of livability scores across Middlesex County](middlesex_livability/screenshots/geographic_distribution.png)
 
 ![Dashboard overview with key metrics and composite score rankings](middlesex_livability/screenshots/dashboard_overview.png)
 
 **Key Findings**
-- Cambridge (02139) and Wellesley (02481) tied #1 at 73.8 — Cambridge leads on education (76.6% Bach+), Wellesley on income ($227,898)
-- Lawrence (01840) ranks last at 10.2 — lowest income in the county, highest population density
-- Wealthy outer suburbs score lowest on commute despite high incomes
-- Two ZCTAs with Census suppression codes (−666666666) filled with county medians rather than dropped, preserving all 100 ZCTAs
-
+- Cambridge (02139) and Wellesley (02481) tied for the top spot at 73.8. Cambridge leads in education (76.6% Bachelor’s+), while Wellesley leads in income ($227,898)
+- Lawrence (01840) ranks last at 10.2, with the lowest income and highest population density in the county
+- Some high-income suburbs score low on commute time, showing that income alone does not define livability
+- Census suppression values were imputed using county medians to preserve all 100 ZCTAs in the analysis
+- 
 **Tech Stack:** Python · GeoPandas · Plotly · Streamlit  
 **Data Source:** ACS 5-Year 2020 (Census API) · TIGER/Line ZCTA boundaries
 
@@ -49,9 +45,7 @@ The dashboard allows users to explore spatial patterns and compare livability sc
 
 ### 2. USPTO Patent Choropleth Map
 
-Maps utility patent grant activity across all 50 U.S. states and DC using USPTO CBSA data for 2015, with two choropleth views — raw count and per-capita rate.
-
-This project highlights how geographic patterns of innovation shift when comparing absolute counts versus population-adjusted metrics.
+This project maps utility patent activity across all 50 U.S. states and DC using USPTO data from 2015. It includes two views, total patent counts and per-capita rates, to show how the geography of innovation changes depending on how it is measured.
 
 ![Raw patent count choropleth — California leads with 40,134 grants](uspto_patent_map/screenshots/raw_patent_count.png)
 
@@ -59,10 +53,10 @@ This project highlights how geographic patterns of innovation shift when compari
 
 
 **Key Findings**
-- California leads raw volume at 40,134 patents — nearly 4× New York (12,244)
-- DC leads per capita at 343.6 per 100K — federal research institutions in a tiny geography
-- Massachusetts ranks top-3 per capita at 100.8, driven by the Boston-Cambridge biotech corridor
-- San Jose metro alone produced 14,618 patents — more than most entire states
+- California leads raw volume at 40,134 patents, nearly 4x New York (12,244)
+- DC ranks highest per capita at 343.6 per 100k, reflecting a dense concentration of research institutions
+- Massachusetts ranks top-3 per capita at 100.8, driven by the Boston Cambridge innovation corridor
+- San Jose metro alone produced 14,618 patents, more than most entire states
 
 **Tech Stack:** Python · GeoPandas · Plotly · Streamlit  
 **Data Sources:** USPTO Utility Patent Grants 2015 · TIGER/Line state boundaries · Census 2015 population estimates
