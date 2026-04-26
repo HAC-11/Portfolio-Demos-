@@ -105,7 +105,7 @@ GR = dict(showgrid=True, gridcolor="#E8E3DA", zerolinecolor="#C8C2B6")
 # ── DATA ──────────────────────────────────────────────────────────────────────
 @st.cache_data
 def load_data():
-    df = pd.read_csv("/Users/hetvichavda/Downloads/Patents.csv", encoding="latin1")
+    df = pd.read_csv("uspto_patent_map/Patents.csv", encoding="latin1")
     df = df.dropna(subset=["Patents_2015"])
 
     def state_from_msa(name):
