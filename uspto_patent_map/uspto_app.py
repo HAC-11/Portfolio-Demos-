@@ -1,0 +1,496 @@
+"""
+USPTO Patent Activity — U.S. Innovation Geography 2015
+Hetvi Chavda · MS Data Analytics Engineering · Northeastern University
+
+Run:
+    streamlit run uspto_app.py
+"""
+
+import streamlit as st
+import pandas as pd
+import geopandas as gpd
+import plotly.graph_objects as go
+import warnings
+warnings.filterwarnings("ignore")
+
+st.set_page_config(
+    page_title="USPTO Patent Activity",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+st.markdown("""
+<style>
+    [data-testid="stAppViewContainer"] { background: #FAFAF7; }
+    [data-testid="stSidebar"] { display: none; }
+    [data-testid="collapsedControl"] { display: none; }
+    header[data-testid="stHeader"] { background: transparent; }
+    .block-container { padding: 0 !important; max-width: 100% !important; }
+    h1,h2,h3 { color: #1A1612 !important; }
+    p { color: #7A7268; }
+    footer { visibility: hidden; }
+    .stMetric {
+        background: white !important;
+        border: 1px solid #DDD8CE !important;
+        border-top: 3px solid #0F2557 !important;
+        border-radius: 0 0 4px 4px !important;
+        padding: 16px !important;
+    }
+    .stMetric label {
+        color: #7A7268 !important;
+        font-size: 10px !important;
+        letter-spacing: 1px !important;
+        text-transform: uppercase !important;
+        font-family: monospace !important;
+    }
+    .stMetric [data-testid="stMetricValue"] {
+        color: #0F2557 !important;
+        font-size: 22px !important;
+        font-weight: 700 !important;
+    }
+    .stRadio label { color: #7A7268 !important; font-size: 13px !important; }
+    .stDownloadButton button {
+        background: #0F2557 !important;
+        color: white !important;
+        border: none !important;
+        font-family: monospace !important;
+        font-size: 11px !important;
+        letter-spacing: 1px !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ── CONSTANTS ─────────────────────────────────────────────────────────────────
+POP_2015 = {
+    "AK":738432,"AL":4858979,"AR":2978204,"AZ":6828065,
+    "CA":39144818,"CO":5456574,"CT":3590886,"DC":672228,
+    "DE":945934,"FL":20271272,"GA":10214860,"HI":1431603,
+    "IA":3123899,"ID":1654930,"IL":12859995,"IN":6619680,
+    "KS":2911641,"KY":4425092,"LA":4670724,"MA":6794422,
+    "MD":6006401,"ME":1329328,"MI":9922576,"MN":5489594,
+    "MO":6083672,"MS":2992333,"MT":1032949,"NC":10042802,
+    "ND":756927,"NE":1896190,"NH":1330608,"NJ":8958013,
+    "NM":2085109,"NV":2890845,"NY":19795791,"OH":11613423,
+    "OK":3911338,"OR":4028977,"PA":12802503,"RI":1056298,
+    "SC":4896146,"SD":858469,"TN":6600299,"TX":27469114,
+    "UT":2995919,"VA":8382993,"VT":626042,"WA":7170351,
+    "WI":5771337,"WV":1844128,"WY":586107,
+}
+
+METROS = [
+    ("San Jose-Sunnyvale-Santa Clara, CA", 14618),
+    ("San Francisco-Oakland-Fremont, CA", 9732),
+    ("New York-N. New Jersey-Long Island, NY-NJ-PA", 7754),
+    ("Los Angeles-Long Beach-Santa Ana, CA", 6476),
+    ("Boston-Cambridge-Quincy, MA-NH", 5949),
+    ("San Diego-Carlsbad-San Marcos, CA", 5460),
+    ("Seattle-Tacoma-Bellevue, WA", 4739),
+    ("Chicago-Joliet-Naperville, IL-IN-WI", 3909),
+    ("Minneapolis-St. Paul-Bloomington, MN-WI", 3419),
+    ("Detroit-Warren-Livonia, MI", 3305),
+    ("Houston-Sugar Land-Baytown, TX", 3186),
+    ("Dallas-Fort Worth-Arlington, TX", 3026),
+    ("Austin-Round Rock-San Marcos, TX", 2700),
+    ("Philadelphia-Camden-Wilmington, PA-NJ-DE-MD", 2357),
+    ("Portland-Vancouver-Hillsboro, OR-WA", 2163),
+]
+
+PT = dict(
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(family="sans-serif", color="#7A7268", size=12)
+)
+GR = dict(showgrid=True, gridcolor="#E8E3DA", zerolinecolor="#C8C2B6")
+
+# ── DATA ──────────────────────────────────────────────────────────────────────
+@st.cache_data
+def load_data():
+    df = pd.read_csv("/Users/hetvichavda/Downloads/Patents.csv", encoding="latin1")
+    df = df.dropna(subset=["Patents_2015"])
+
+    def state_from_msa(name):
+        parts = str(name).split(",")
+        if len(parts) > 1:
+            p = parts[-1].strip().split("-")[0].strip()
+            if len(p) == 2 and p.isalpha():
+                return p.upper()
+        return None
+
+    df["State"] = df["MSA_Name"].apply(state_from_msa)
+    df_c = df[df["State"].notna()].copy()
+    sp = (df_c.groupby("State")["Patents_2015"]
+          .sum().reset_index().rename(columns={"Patents_2015":"Patents"}))
+    sp["Patents"]    = sp["Patents"].astype(int)
+    sp["Population"] = sp["State"].map(POP_2015)
+    sp = sp.dropna(subset=["Population"])
+    sp["Population"] = sp["Population"].astype(int)
+    sp["PerCapita"]  = ((sp["Patents"] / sp["Population"]) * 100_000).round(1)
+    return sp, df_c
+
+@st.cache_data
+def load_geo(_sp):
+    try:
+        gdf = gpd.read_file("/Users/hetvichavda/Downloads/tl_2020_us_state/tl_2020_us_state.shp")
+        gdf = gdf.to_crs(epsg=4326)
+        gdf = gdf[~gdf["STUSPS"].isin(["PR","VI","GU","MP","AS"])].copy()
+        mg  = gdf.merge(_sp, left_on="STUSPS", right_on="State", how="left")
+        mg["Patents"]    = mg["Patents"].fillna(0).astype(int)
+        mg["PerCapita"]  = mg["PerCapita"].fillna(0.0)
+        mg["Population"] = mg["Population"].fillna(0).astype(int)
+        return mg
+    except FileNotFoundError:
+        return None
+
+sp, df_clean = load_data()
+mg = load_geo(sp)
+top_raw = sp.nlargest(1,"Patents").iloc[0]
+top_pc  = sp.nlargest(1,"PerCapita").iloc[0]
+
+# ── HELPERS ───────────────────────────────────────────────────────────────────
+def navy_scale(vals):
+    mx,q7,q4 = vals.max(),vals.quantile(.7),vals.quantile(.4)
+    return ["#C8870A" if v==mx else "#0F2557" if v>=q7 else "#1A3A8C" if v>=q4 else "#7DB3E8" for v in vals]
+
+def green_scale(vals):
+    mx,q7,q4 = vals.max(),vals.quantile(.7),vals.quantile(.4)
+    return ["#C8870A" if v==mx else "#276749" if v>=q7 else "#48BB78" if v>=q4 else "#9AE6B4" for v in vals]
+
+# TOP NAV BAR
+st.markdown("""
+<div style="background:#0F2557;padding:14px 64px;display:flex;
+            align-items:center;justify-content:space-between;
+            position:sticky;top:0;z-index:999;
+            border-bottom:3px solid #C8870A">
+  <div style="font-family:Georgia,serif;font-size:16px;color:white;font-weight:700">
+    USPTO Patent Activity — 2015
+  </div>
+  <div style="font-family:monospace;font-size:10px;color:rgba(255,255,255,.4);
+              letter-spacing:2px;text-transform:uppercase">
+    Hetvi Chavda · Northeastern University
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+# HERO
+st.markdown(f"""
+<div style="background:#0F2557;padding:80px 64px 72px;position:relative;overflow:hidden">
+  <div style="position:absolute;bottom:0;left:0;right:0;height:4px;
+              background:linear-gradient(90deg,#C8870A,#F0A820,#2D5BE3)"></div>
+  <p style="font-family:monospace;font-size:10px;letter-spacing:3px;
+            text-transform:uppercase;color:#C8870A;margin-bottom:18px">
+    USPTO · Utility Patent Grants · 2015
+  </p>
+  <h1 style="font-family:Georgia,serif;font-size:52px;line-height:1.05;
+             color:white;margin-bottom:20px;font-weight:700;max-width:700px">
+    USPTO Patent Activity<br>
+    <span style="color:#C8870A">U.S. State Analysis</span>
+  </h1>
+  <p style="font-size:15px;color:rgba(255,255,255,.55);max-width:560px;
+            line-height:1.75;margin-bottom:40px">
+    Utility patent grants mapped across all 50 states — raw count and per-capita.
+    Built with GeoPandas, Matplotlib, and Plotly on Census TIGER/Line boundaries.
+  </p>
+  <div style="display:flex;gap:48px;flex-wrap:wrap">
+    <div style="border-left:2px solid #C8870A;padding-left:16px">
+      <div style="font-family:Georgia,serif;font-size:32px;color:#C8870A;line-height:1">{sp["Patents"].sum():,}</div>
+      <div style="font-family:monospace;font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-top:4px">Patents Mapped</div>
+    </div>
+    <div style="border-left:2px solid #C8870A;padding-left:16px">
+      <div style="font-family:Georgia,serif;font-size:32px;color:#C8870A;line-height:1">51</div>
+      <div style="font-family:monospace;font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-top:4px">States + DC</div>
+    </div>
+    <div style="border-left:2px solid #C8870A;padding-left:16px">
+      <div style="font-family:Georgia,serif;font-size:32px;color:#C8870A;line-height:1">{top_raw["State"]}</div>
+      <div style="font-family:monospace;font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-top:4px">Leads Raw Count</div>
+    </div>
+    <div style="border-left:2px solid #C8870A;padding-left:16px">
+      <div style="font-family:Georgia,serif;font-size:32px;color:#C8870A;line-height:1">{top_pc["State"]}</div>
+      <div style="font-family:monospace;font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;margin-top:4px">Leads Per Capita</div>
+    </div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+# SECTION 1 — CHOROPLETH
+st.markdown("""
+<div style="padding:48px 64px 0;border-top:1px solid #DDD8CE">
+  <p style="font-family:monospace;font-size:10px;letter-spacing:3px;
+            text-transform:uppercase;color:#C8870A;margin-bottom:10px">Choropleth</p>
+  <h2 style="font-family:Georgia,serif;font-size:30px;color:#1A1612;
+             margin-bottom:8px;font-weight:700">Patent Grants by State</h2>
+
+</div>
+""", unsafe_allow_html=True)
+
+pad_l, pad_r = st.columns([1, 20])
+with pad_r:
+    with st.container():
+        st.markdown('<div style="padding-right:64px">', unsafe_allow_html=True)
+        mode = st.radio("", ["Raw Patent Count", "Per 100,000 People"],
+                        horizontal=True, label_visibility="collapsed",
+                        key="map_mode")
+        is_pc = mode == "Per 100,000 People"
+        z     = "PerCapita" if is_pc else "Patents"
+        cs    = (
+            [[0,"#F0FFF4"],[0.15,"#C6F6D5"],[0.3,"#9AE6B4"],
+             [0.5,"#48BB78"],[0.7,"#276749"],[0.85,"#1C4532"],[1,"#0A2818"]]
+            if is_pc else
+            [[0,"#EBF5FF"],[0.15,"#90CDF4"],[0.35,"#4299E1"],
+             [0.6,"#2B6CB0"],[0.8,"#1A365D"],[1,"#0A1628"]]
+        )
+
+        if mg is not None:
+            hover = mg.apply(lambda r:
+                f"<b>{r['NAME']} ({r['STUSPS']})</b><br>"
+                f"Patents: {r['Patents']:,}<br>"
+                f"Per 100K: {r['PerCapita']}<br>"
+                f"Population: {r['Population']:,}"
+                if r["Patents"] > 0 else f"<b>{r['NAME']}</b><br>No data", axis=1)
+
+            fig = go.Figure(go.Choropleth(
+                locationmode="USA-states",
+                locations=mg["STUSPS"], z=mg[z],
+                text=hover, hoverinfo="text",
+                colorscale=cs,
+                colorbar=dict(
+                    title=dict(text="Per 100K" if is_pc else "Patents",
+                               font=dict(size=11,color="#7A7268")),
+                    tickfont=dict(size=10,color="#7A7268"),
+                    bgcolor="rgba(0,0,0,0)",
+                    bordercolor="#DDD8CE", borderwidth=1
+                ),
+                marker=dict(line=dict(color="#FAFAF7", width=1.5))
+            ))
+            fig.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+    plot_bgcolor='rgba(0,0,0,0)',
+    font=dict(family='sans-serif', color='#7A7268', size=12), height=480,
+                geo=dict(scope="usa", showland=True, landcolor="#D4D0C8",
+                         showocean=True, oceancolor="#B8D4E8",
+                         showcoastlines=True, coastlinecolor="#8A8580",
+                         showframe=False, bgcolor="rgba(0,0,0,0)",
+                         subunitcolor="#8A8580", lakecolor="#B8D4E8"),
+                margin=dict(l=0,r=0,t=10,b=0)
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning("Shapefile not found. Place `tl_2020_us_state/` in your Downloads folder.")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("""
+            <div style="border-left:4px solid #C8870A;padding:18px 24px;
+                        background:white;border-radius:0 4px 4px 0;margin-top:8px">
+              <div style="font-family:Georgia,serif;font-size:44px;color:#C8870A;
+                          font-weight:700;line-height:1;margin-bottom:8px">40,134</div>
+              <div style="font-size:13px;color:#7A7268;line-height:1.6">
+                California patents in 2015 — nearly 4x the next state.
+                Raw counts heavily favour large-population states.
+              </div>
+            </div>""", unsafe_allow_html=True)
+        with col2:
+            st.markdown("""
+            <div style="border-left:4px solid #0F2557;padding:18px 24px;
+                        background:white;border-radius:0 4px 4px 0;margin-top:8px">
+              <div style="font-family:Georgia,serif;font-size:44px;color:#0F2557;
+                          font-weight:700;line-height:1;margin-bottom:8px">343.6</div>
+              <div style="font-size:13px;color:#7A7268;line-height:1.6">
+                DC patents per 100,000 people — #1 per capita.
+                Federal research institutions in a very small geography.
+              </div>
+            </div>""", unsafe_allow_html=True)
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+# SECTION 2 — RANKINGS
+st.markdown("""
+<div style="padding:48px 64px 0;border-top:1px solid #DDD8CE;margin-top:40px;background:white">
+  <p style="font-family:monospace;font-size:10px;letter-spacing:3px;
+            text-transform:uppercase;color:#C8870A;margin-bottom:10px">Rankings</p>
+  <h2 style="font-family:Georgia,serif;font-size:30px;color:#1A1612;
+             margin-bottom:8px;font-weight:700">Raw Count vs. Per Capita</h2>
+  
+</div>
+""", unsafe_allow_html=True)
+
+with st.container():
+    st.markdown('<div style="padding:0 64px 48px;background:white">', unsafe_allow_html=True)
+    top_raw_25 = sp.nlargest(25,"Patents").sort_values("Patents",ascending=True)
+    top_pc_25  = sp.nlargest(25,"PerCapita").sort_values("PerCapita",ascending=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        fig1 = go.Figure(go.Bar(
+            x=top_raw_25["Patents"], y=top_raw_25["State"],
+            orientation="h",
+            marker=dict(color=navy_scale(top_raw_25["Patents"]), line=dict(width=0)),
+            text=top_raw_25["Patents"].apply(lambda x: f"{x:,}"),
+            textposition="outside",
+            textfont=dict(color="#7A7268",size=10),
+            hovertemplate="<b>%{y}</b><br>Patents: %{x:,}<extra></extra>"
+        ))
+        fig1.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+    plot_bgcolor='rgba(0,0,0,0)',
+    font=dict(family='sans-serif', color='#7A7268', size=12), height=540,
+            title=dict(text="Raw Count", font=dict(color="#1A1612",size=14,
+                       family="Georgia,serif"), x=0),
+            xaxis=dict(showgrid=True, gridcolor='#E8E3DA', zerolinecolor='#C8C2B6', tickformat=",",
+                       titlefont=dict(color="#7A7268")),
+            yaxis=dict(showgrid=False, tickfont=dict(size=11,color="#3D3530")),
+            margin=dict(l=40,r=80,t=40,b=40)
+        )
+        st.plotly_chart(fig1, use_container_width=True)
+
+    with col2:
+        fig2 = go.Figure(go.Bar(
+            x=top_pc_25["PerCapita"], y=top_pc_25["State"],
+            orientation="h",
+            marker=dict(color=green_scale(top_pc_25["PerCapita"]), line=dict(width=0)),
+            text=top_pc_25["PerCapita"].apply(lambda x: f"{x:.1f}"),
+            textposition="outside",
+            textfont=dict(color="#7A7268",size=10),
+            hovertemplate="<b>%{y}</b><br>Per 100K: %{x:.1f}<extra></extra>"
+        ))
+        fig2.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+    plot_bgcolor='rgba(0,0,0,0)',
+    font=dict(family='sans-serif', color='#7A7268', size=12), height=540,
+            title=dict(text="Per 100,000 People", font=dict(color="#1A1612",size=14,
+                       family="Georgia,serif"), x=0),
+            xaxis=dict(showgrid=True, gridcolor='#E8E3DA', zerolinecolor='#C8C2B6', titlefont=dict(color="#7A7268")),
+            yaxis=dict(showgrid=False, tickfont=dict(size=11,color="#3D3530")),
+            margin=dict(l=40,r=60,t=40,b=40)
+        )
+        st.plotly_chart(fig2, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# SECTION 3 — METRO AREAS
+st.markdown("""
+<div style="padding:48px 64px 0;border-top:1px solid #DDD8CE">
+  <p style="font-family:monospace;font-size:10px;letter-spacing:3px;
+            text-transform:uppercase;color:#C8870A;margin-bottom:10px">Metro Areas</p>
+  <h2 style="font-family:Georgia,serif;font-size:30px;color:#1A1612;
+             margin-bottom:8px;font-weight:700">Metro Areas</h2>
+  
+</div>
+""", unsafe_allow_html=True)
+
+with st.container():
+    st.markdown('<div style="padding:0 64px 8px">', unsafe_allow_html=True)
+    c1,c2,c3,c4 = st.columns(4)
+    c1.metric("San Jose", "14,618", "#1 Silicon Valley")
+    c2.metric("San Francisco", "9,732", "#2 Bay Area")
+    c3.metric("Boston-Cambridge", "5,949", "#5 Route 128")
+    c4.metric("Minneapolis", "3,419", "#9 Med Devices")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+with st.container():
+    st.markdown('<div style="padding:16px 64px 48px">', unsafe_allow_html=True)
+    mdf = pd.DataFrame(METROS, columns=["Metro","Patents"])
+    mdf["Short"] = mdf["Metro"].apply(lambda x: x.split(",")[0])
+    ms  = mdf.sort_values("Patents", ascending=True)
+
+    fig_m = go.Figure(go.Bar(
+        x=ms["Patents"], y=ms["Short"],
+        orientation="h",
+        marker=dict(color=navy_scale(ms["Patents"]), line=dict(width=0)),
+        text=ms["Patents"].apply(lambda x: f"{x:,}"),
+        textposition="outside",
+        textfont=dict(color="#7A7268",size=11),
+        customdata=ms["Metro"],
+        hovertemplate="<b>%{customdata}</b><br>Patents: %{x:,}<extra></extra>"
+    ))
+    fig_m.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+    plot_bgcolor='rgba(0,0,0,0)',
+    font=dict(family='sans-serif', color='#7A7268', size=12), height=480,
+        xaxis=dict(showgrid=True, gridcolor='#E8E3DA', zerolinecolor='#C8C2B6', tickformat=",", title="Patent Grants 2015",
+                   titlefont=dict(color="#7A7268")),
+        yaxis=dict(showgrid=False, tickfont=dict(size=11,color="#3D3530")),
+        margin=dict(l=10,r=90,t=10,b=50)
+    )
+    st.plotly_chart(fig_m, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# SECTION 4 — FINDINGS
+st.markdown("""
+<div style="padding:48px 64px 0;border-top:1px solid #DDD8CE;background:white">
+  <p style="font-family:monospace;font-size:10px;letter-spacing:3px;
+            text-transform:uppercase;color:#C8870A;margin-bottom:10px">Analysis</p>
+  <h2 style="font-family:Georgia,serif;font-size:30px;color:#1A1612;
+             margin-bottom:32px;font-weight:700">Key Findings</h2>
+</div>
+""", unsafe_allow_html=True)
+
+findings = [
+    ("Coastal Concentration",
+     "CA, NY, WA, MA, and OR account for the majority of raw output — reflecting concentration of tech, pharma, and biotech industries in coastal metro areas."),
+    ("Per Capita Surprises",
+     "DC (343.6), MA (100.8), WA (85.6), and VT (69.5) rank far higher per capita than raw counts suggest. Small, innovation-dense geographies outperform on normalisation."),
+    ("Midwest Manufacturing",
+     "Michigan (55.9), Minnesota (80.9), and Wisconsin (33.5) show strong per-capita performance driven by automotive, medical device, and industrial manufacturing."),
+    ("Boston",
+     "Boston-Cambridge ranks 5th nationally at 5,949 grants. Massachusetts ranks top-3 per capita at 100.8 — anchored by biotech and pharma R&D in the Route 128 corridor."),
+    ("Silicon Valley Gap",
+     "San Jose produced 14,618 patents — 1.5x San Francisco and over 2x any non-California metro. Semiconductor and software IP concentration is unmatched nationally."),
+    ("Methodology",
+     "Primary state extracted from MSA name string. Multi-state metros assigned to first-listed state. State boundaries from Census TIGER/Line via GeoPandas (EPSG:4326). Static map uses Albers Equal Area (EPSG:5070)."),
+]
+
+with st.container():
+    st.markdown('<div style="padding:0 64px 48px;background:white">', unsafe_allow_html=True)
+    rows = [findings[i:i+3] for i in range(0, len(findings), 3)]
+    for row in rows:
+        cols = st.columns(3)
+        for col, (title, body) in zip(cols, row):
+            col.markdown(f"""
+            <div style="border:1px solid #DDD8CE;border-top:3px solid #0F2557;
+                        background:#FAFAF7;padding:20px;margin-bottom:14px;
+                        border-radius:0 0 4px 4px">
+              <div style="font-family:monospace;font-size:10px;font-weight:600;
+                          color:#0F2557;text-transform:uppercase;letter-spacing:1px;
+                          margin-bottom:8px">{title}</div>
+              <p style="font-size:12px;color:#7A7268;margin:0;line-height:1.65">{body}</p>
+            </div>""", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# SECTION 5 — DATA
+st.markdown("""
+<div style="padding:48px 64px 0;border-top:1px solid #DDD8CE">
+  <p style="font-family:monospace;font-size:10px;letter-spacing:3px;
+            text-transform:uppercase;color:#C8870A;margin-bottom:10px">Data</p>
+  <h2 style="font-family:Georgia,serif;font-size:30px;color:#1A1612;
+             margin-bottom:24px;font-weight:700">Full Dataset</h2>
+</div>
+""", unsafe_allow_html=True)
+
+with st.container():
+    st.markdown('<div style="padding:0 64px 48px">', unsafe_allow_html=True)
+    by_raw = sp.sort_values("Patents", ascending=False).reset_index(drop=True)
+    pc_rank = {r["State"]: i+1 for i, r in
+               sp.sort_values("PerCapita", ascending=False).reset_index(drop=True).iterrows()}
+    by_raw["Raw Rank"]        = by_raw.index + 1
+    by_raw["Per Capita Rank"] = by_raw["State"].map(pc_rank)
+    disp = by_raw[["Raw Rank","State","Patents","Population","PerCapita","Per Capita Rank"]].copy()
+    disp.columns = ["Raw Rank","State","Patents","Population","Per 100K","Per Capita Rank"]
+    disp["Patents"]    = disp["Patents"].apply(lambda x: f"{x:,}")
+    disp["Population"] = disp["Population"].apply(lambda x: f"{x:,}")
+    st.dataframe(disp, use_container_width=True, hide_index=True)
+    st.download_button("Download CSV", data=sp.to_csv(index=False),
+                       file_name="uspto_patent_state_data.csv", mime="text/csv")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# FOOTER
+st.markdown("""
+<div style="background:#0F2557;border-top:3px solid #C8870A;
+            padding:24px 64px;display:flex;justify-content:space-between;
+            align-items:center;flex-wrap:wrap;gap:12px;margin-top:20px">
+  <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,.5)">
+    <strong style="color:#C8870A">Hetvi Chavda</strong> · hetvichavda.com
+  </div>
+  <div style="font-family:monospace;font-size:10px;color:rgba(255,255,255,.3)">
+    USPTO 2015 · Census TIGER/Line · Python · GeoPandas · Plotly
+  </div>
+</div>
+""", unsafe_allow_html=True)
