@@ -324,7 +324,7 @@ st.download_button("Download CSV", data=sp.to_csv(index=False), file_name="uspto
 
 st.markdown("""
 <div style="background:#0F2557;border-top:3px solid #C8870A;padding:24px 64px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:20px">
-  <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,.5)"><strong style="color:#C8870A">Hetvi Chavda</strong> · hetvichavda.com</div>
+  <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,.5)"><strong style="color:#C8870A">Hetvi Chavda</strong></div>
   <div style="font-family:monospace;font-size:10px;color:rgba(255,255,255,.3)">USPTO 2015 · Census TIGER/Line · Python · GeoPandas · Plotly</div>
 </div>
 """, unsafe_allow_html=True)
