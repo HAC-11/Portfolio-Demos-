@@ -165,10 +165,10 @@ if page == "Overview":
         hovertemplate="<b>%{y}</b><br>Score: %{x:.1f}<extra></extra>"
     ))
     fig_bar = apply_dark(fig_bar, max(700,len(df)*14))
-    fig_bar.layout.xaxis = dict(range=[0,112], showgrid=True, gridcolor="#2a3025",
+    fig_bar.update_xaxes(range=[0,112], showgrid=True, gridcolor="#2a3025",
                                  title="Composite Score (0-100)", titlefont=dict(color="#7a8a72"))
-    fig_bar.layout.yaxis = dict(showgrid=False, tickfont=dict(size=9,color="#7a8a72"))
-    fig_bar.layout.margin = dict(l=10,r=60,t=10,b=40)
+    fig_bar.update_yaxes(showgrid=False, tickfont=dict(size=9,color="#7a8a72"))
+    fig_bar.update_layout(margin=dict(l=10,r=60,t=10,b=40))
     st.plotly_chart(fig_bar, use_container_width=True)
 
     st.markdown("---")
@@ -182,10 +182,10 @@ if page == "Overview":
                         labels={"Median_Income":"Median Income ($)","Mean_Commute":"Mean Commute (min)","Composite_Score":"Score"})
     fig_sc.update_traces(marker=dict(opacity=0.85,line=dict(width=0.5,color="white")))
     fig_sc = apply_dark(fig_sc, 460)
-    fig_sc.layout.xaxis = dict(showgrid=True, gridcolor="#2a3025", tickprefix="$", tickformat=",.0f",
+    fig_sc.update_xaxes(showgrid=True, gridcolor="#2a3025", tickprefix="$", tickformat=",.0f",
                                 titlefont=dict(color="#7a8a72"))
-    fig_sc.layout.yaxis = dict(showgrid=True, gridcolor="#2a3025", titlefont=dict(color="#7a8a72"))
-    fig_sc.layout.margin = dict(l=10,r=10,t=10,b=50)
+    fig_sc.update_yaxes(showgrid=True, gridcolor="#2a3025", titlefont=dict(color="#7a8a72"))
+    fig_sc.update_layout(margin=dict(l=10,r=10,t=10,b=50))
     st.plotly_chart(fig_sc, use_container_width=True)
 
 elif page == "Map":
@@ -200,7 +200,7 @@ elif page == "Map":
                                        hover_data={"ZCTA_str":True,"Town":True,"Composite_Score":":.1f","Median_Income":True,"Mean_Commute":True,"Pct_Bachelors":True,"Grade":True},
                                        labels={ind_option:"Score (0-100)"})
         fig_map.layout.height = 620
-        fig_map.layout.margin = dict(l=0,r=0,t=0,b=0)
+        fig_map.update_layout(margin=dict(l=0,r=0,t=0,b=0))
         fig_map.layout.paper_bgcolor = "rgba(0,0,0,0)"
         st.plotly_chart(fig_map, use_container_width=True)
     else:
@@ -236,12 +236,12 @@ elif page == "Compare":
             line=dict(color=color,width=2.5), name=d["Label"]
         ))
     fig_radar = apply_dark(fig_radar, 420)
-    fig_radar.layout.polar = dict(
-        radialaxis=dict(visible=True,range=[0,100],ticksuffix="%",gridcolor="#2a3025",linecolor="#2a3025",tickfont=dict(color="#7a8a72",size=9)),
+    fig_radar.update_layout(polar=dict(
+        radialaxis=dict(visible=True,range=[0,100],ticksuffix="%",gridcolor="#2a3025",linecolor="#2a3025",tickfont=dict(color="#7a8a72",size=9))),
         angularaxis=dict(tickfont=dict(color="#a0b090",size=12)),
         bgcolor="rgba(0,0,0,0)"
     )
-    fig_radar.layout.legend = dict(font=dict(color="#a0b090",size=11))
+    fig_radar.update_layout(legend=dict(font=dict(color="#a0b090",size=11)))
     st.plotly_chart(fig_radar, use_container_width=True)
 
     rows=[("Overall Score","Composite_Score",lambda v:f"{v:.1f}"),
@@ -277,10 +277,10 @@ elif page == "Indicators":
         hovertemplate="<b>%{y}</b><br>Score: %{x:.1f}<extra></extra>"
     ))
     fig_i = apply_dark(fig_i, max(700,len(df)*14))
-    fig_i.layout.xaxis = dict(range=[0,115], showgrid=True, gridcolor="#2a3025",
+    fig_i.update_xaxes(range=[0,115], showgrid=True, gridcolor="#2a3025",
                                title="Score (0-100)", titlefont=dict(color="#7a8a72"))
-    fig_i.layout.yaxis = dict(showgrid=False, tickfont=dict(size=9,color="#7a8a72"))
-    fig_i.layout.margin = dict(l=10,r=60,t=10,b=40)
+    fig_i.update_yaxes(showgrid=False, tickfont=dict(size=9,color="#7a8a72"))
+    fig_i.update_layout(margin=dict(l=10,r=60,t=10,b=40))
     st.plotly_chart(fig_i, use_container_width=True)
 
     st.markdown("---")
@@ -298,12 +298,12 @@ elif page == "Indicators":
         fig_r.add_trace(go.Scatterpolar(r=vals,theta=SCORE_NAMES+[SCORE_NAMES[0]],
                                         fill="toself",fillcolor=fc,line=dict(color=lc,width=2),name=row["Label"]))
     fig_r = apply_dark(fig_r, 500)
-    fig_r.layout.polar = dict(
-        radialaxis=dict(visible=True,range=[0,100],ticksuffix="%",gridcolor="#2a3025",linecolor="#2a3025",tickfont=dict(color="#7a8a72",size=9)),
+    fig_r.update_layout(polar=dict(
+        radialaxis=dict(visible=True,range=[0,100],ticksuffix="%",gridcolor="#2a3025",linecolor="#2a3025",tickfont=dict(color="#7a8a72",size=9))),
         angularaxis=dict(tickfont=dict(color="#a0b090",size=12)),
         bgcolor="rgba(0,0,0,0)"
     )
-    fig_r.layout.legend = dict(font=dict(color="#a0b090",size=10),x=1.05,y=1.0)
+    fig_r.update_layout(legend=dict(font=dict(color="#a0b090",size=10)),x=1.05,y=1.0)
     st.plotly_chart(fig_r, use_container_width=True)
 
 elif page == "Data":
