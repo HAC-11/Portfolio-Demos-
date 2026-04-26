@@ -235,9 +235,12 @@ elif page == "Compare":
             line=dict(color=color,width=2.5), name=d["Label"]
         ))
     fig_radar = apply_dark(fig_radar, 420)
-    fig_radar.update_layout(polar=dict(
-        radialaxis=dict(visible=True,range=[0,100],ticksuffix="%",gridcolor="#2a3025",linecolor="#2a3025",tickfont=dict(color="#7a8a72",size=9))),
-        angularaxis=dict(tickfont=dict(color="#a0b090",size=12)),
+    fig_radar.update_polars(
+        radialaxis_visible=True,
+        radialaxis_range=[0,100],
+        radialaxis_ticksuffix="%",
+        radialaxis_gridcolor="#2a3025",
+        radialaxis_linecolor="#2a3025",
         bgcolor="rgba(0,0,0,0)"
     )
     fig_radar.update_layout(legend=dict(font=dict(color="#a0b090",size=11)))
@@ -297,9 +300,12 @@ elif page == "Indicators":
         fig_r.add_trace(go.Scatterpolar(r=vals,theta=SCORE_NAMES+[SCORE_NAMES[0]],
                                         fill="toself",fillcolor=fc,line=dict(color=lc,width=2),name=row["Label"]))
     fig_r = apply_dark(fig_r, 500)
-    fig_r.update_layout(polar=dict(
-        radialaxis=dict(visible=True,range=[0,100],ticksuffix="%",gridcolor="#2a3025",linecolor="#2a3025",tickfont=dict(color="#7a8a72",size=9))),
-        angularaxis=dict(tickfont=dict(color="#a0b090",size=12)),
+    fig_r.update_polars(
+        radialaxis_visible=True,
+        radialaxis_range=[0,100],
+        radialaxis_ticksuffix="%",
+        radialaxis_gridcolor="#2a3025",
+        radialaxis_linecolor="#2a3025",
         bgcolor="rgba(0,0,0,0)"
     )
     fig_r.update_layout(legend=dict(font=dict(color="#a0b090",size=10)),x=1.05,y=1.0)
