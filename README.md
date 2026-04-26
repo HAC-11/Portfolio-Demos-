@@ -31,7 +31,7 @@ Each ZCTA receives a normalized 0–100 score and letter grade.
 - Lawrence (01840) ranks last at 10.2, with the lowest income and highest population density in the county
 - Some high-income suburbs score low on commute time, showing that income alone does not define livability
 - Census suppression values were imputed using county medians to preserve all 100 ZCTAs in the analysis
-- 
+
 **Tech Stack:** Python · GeoPandas · Plotly · Streamlit  
 **Data Source:** ACS 5-Year 2020 (Census API) · TIGER/Line ZCTA boundaries
 
