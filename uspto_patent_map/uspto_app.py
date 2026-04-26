@@ -129,18 +129,28 @@ def load_data():
 
 @st.cache_data
 def load_geo(_sp):
-    try:
-        gdf = gpd.read_file("uspto_patent_map/tl_2020_us_state/tl_2020_us_state.shp")
-        gdf = gdf.to_crs(epsg=4326)
-        gdf = gdf[~gdf["STUSPS"].isin(["PR","VI","GU","MP","AS"])].copy()
-        mg  = gdf.merge(_sp, left_on="STUSPS", right_on="State", how="left")
-        mg["Patents"]    = mg["Patents"].fillna(0).astype(int)
-        mg["PerCapita"]  = mg["PerCapita"].fillna(0.0)
-        mg["Population"] = mg["Population"].fillna(0).astype(int)
-        return mg
-    except FileNotFoundError:
-        return None
+    import urllib.request
+    import zipfile
+    import os
 
+    shp_path = "tl_2020_us_state/tl_2020_us_state.shp"
+
+    if not os.path.exists(shp_path):
+        st.info("Downloading state boundaries...")
+        url = "https://www2.census.gov/geo/tiger/TIGER2020/STATE/tl_2020_us_state.zip"
+        urllib.request.urlretrieve(url, "tl_2020_us_state.zip")
+        with zipfile.ZipFile("tl_2020_us_state.zip", "r") as z:
+            z.extractall("tl_2020_us_state")
+        os.remove("tl_2020_us_state.zip")
+
+    gdf = gpd.read_file(shp_path)
+    gdf = gdf.to_crs(epsg=4326)
+    gdf = gdf[~gdf["STUSPS"].isin(["PR","VI","GU","MP","AS"])].copy()
+    mg  = gdf.merge(_sp, left_on="STUSPS", right_on="State", how="left")
+    mg["Patents"]    = mg["Patents"].fillna(0).astype(int)
+    mg["PerCapita"]  = mg["PerCapita"].fillna(0.0)
+    mg["Population"] = mg["Population"].fillna(0).astype(int)
+    return mg
 sp, df_clean = load_data()
 mg = load_geo(sp)
 top_raw = sp.nlargest(1,"Patents").iloc[0]
