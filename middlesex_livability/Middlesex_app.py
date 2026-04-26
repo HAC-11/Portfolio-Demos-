@@ -125,7 +125,7 @@ def load_geodata(_df):
     Cached so the expensive operation runs only once.
     """
     try:
-        gdf = gpd.read_file("/Users/hetvichavda/Downloads/cb_2020_us_zcta520_500k/cb_2020_us_zcta520_500k.shp")
+        gdf = gpd.read_file("middlesex_livability/cb_2020_us_zcta520_500k/cb_2020_us_zcta520_500k.shp")
         gdf = gdf.to_crs(epsg=4326)
         zctas = _df["ZCTA_str"].tolist()
         gdf_mx = gdf[gdf["ZCTA5CE20"].isin(zctas)].copy()
