@@ -243,7 +243,7 @@ elif page == "Compare":
         radialaxis_linecolor="#2a3025",
         bgcolor="rgba(0,0,0,0)"
     )
-    fig_radar.update_layout(legend=dict(font=dict(color="#a0b090",size=11)))
+    fig_radar.update_layout(showlegend=True)
     st.plotly_chart(fig_radar, use_container_width=True)
 
     rows=[("Overall Score","Composite_Score",lambda v:f"{v:.1f}"),
@@ -308,7 +308,7 @@ elif page == "Indicators":
         radialaxis_linecolor="#2a3025",
         bgcolor="rgba(0,0,0,0)"
     )
-    fig_r.update_layout(legend=dict(font=dict(color="#a0b090",size=10)),x=1.05,y=1.0)
+    fig_r.update_layout(showlegend=True)
     st.plotly_chart(fig_r, use_container_width=True)
 
 elif page == "Data":
