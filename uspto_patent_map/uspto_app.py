@@ -275,8 +275,7 @@ fig_m = go.Figure(go.Bar(
 ))
 fig_m = apply_style(fig_m, 480)
 fig_m.update_xaxes(showgrid=True, gridcolor="#E8E3DA", zerolinecolor="#C8C2B6",
-                           tickformat=",", title="Patent Grants 2015",
-                           titlefont=dict(color="#7A7268"))
+                   tickformat=",", title="Patent Grants 2015")
 fig_m.update_yaxes(showgrid=False, tickfont=dict(size=11,color="#3D3530"))
 fig_m.update_layout(margin=dict(l=10,r=90,t=10,b=50))
 st.plotly_chart(fig_m, use_container_width=True)
