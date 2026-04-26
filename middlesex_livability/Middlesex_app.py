@@ -166,7 +166,7 @@ if page == "Overview":
     ))
     fig_bar = apply_dark(fig_bar, max(700,len(df)*14))
     fig_bar.update_xaxes(range=[0,112], showgrid=True, gridcolor="#2a3025",
-                                 title="Composite Score (0-100)", titlefont=dict(color="#7a8a72"))
+                                 title="Composite Score (0-100)")
     fig_bar.update_yaxes(showgrid=False, tickfont=dict(size=9,color="#7a8a72"))
     fig_bar.update_layout(margin=dict(l=10,r=60,t=10,b=40))
     st.plotly_chart(fig_bar, use_container_width=True)
@@ -182,9 +182,8 @@ if page == "Overview":
                         labels={"Median_Income":"Median Income ($)","Mean_Commute":"Mean Commute (min)","Composite_Score":"Score"})
     fig_sc.update_traces(marker=dict(opacity=0.85,line=dict(width=0.5,color="white")))
     fig_sc = apply_dark(fig_sc, 460)
-    fig_sc.update_xaxes(showgrid=True, gridcolor="#2a3025", tickprefix="$", tickformat=",.0f",
-                                titlefont=dict(color="#7a8a72"))
-    fig_sc.update_yaxes(showgrid=True, gridcolor="#2a3025", titlefont=dict(color="#7a8a72"))
+    fig_sc.update_xaxes(showgrid=True, gridcolor="#2a3025", tickprefix="$", tickformat=",.0f")
+    fig_sc.update_yaxes(showgrid=True, gridcolor="#2a3025")
     fig_sc.update_layout(margin=dict(l=10,r=10,t=10,b=50))
     st.plotly_chart(fig_sc, use_container_width=True)
 
@@ -278,7 +277,7 @@ elif page == "Indicators":
     ))
     fig_i = apply_dark(fig_i, max(700,len(df)*14))
     fig_i.update_xaxes(range=[0,115], showgrid=True, gridcolor="#2a3025",
-                               title="Score (0-100)", titlefont=dict(color="#7a8a72"))
+                               title="Score (0-100)")
     fig_i.update_yaxes(showgrid=False, tickfont=dict(size=9,color="#7a8a72"))
     fig_i.update_layout(margin=dict(l=10,r=60,t=10,b=40))
     st.plotly_chart(fig_i, use_container_width=True)
