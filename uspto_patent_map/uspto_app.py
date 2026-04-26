@@ -184,12 +184,12 @@ if mg is not None:
         marker=dict(line=dict(color="#FAFAF7",width=1.5))
     ))
     fig = apply_style(fig, 480)
-    fig.layout.geo = dict(scope="usa", showland=True, landcolor="#D4D0C8",
+    fig.update_layout(geo=dict(scope="usa", showland=True, landcolor="#D4D0C8",
                           showocean=True, oceancolor="#B8D4E8",
                           showcoastlines=True, coastlinecolor="#8A8580",
                           showframe=False, bgcolor="rgba(0,0,0,0)",
-                          subunitcolor="#8A8580", lakecolor="#B8D4E8")
-    fig.layout.margin = dict(l=0,r=0,t=10,b=0)
+                          subunitcolor="#8A8580", lakecolor="#B8D4E8"))
+    fig.update_layout(margin=dict(l=0,r=0,t=10,b=0))
     st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("Map loading — shapefile downloading on first run.")
@@ -227,10 +227,10 @@ with col1:
         hovertemplate="<b>%{y}</b><br>Patents: %{x:,}<extra></extra>"
     ))
     fig1 = apply_style(fig1, 540)
-    fig1.layout.title = dict(text="Raw Count", font=dict(color="#1A1612",size=14,family="Georgia,serif"),x=0)
-    fig1.layout.xaxis = dict(showgrid=True, gridcolor="#E8E3DA", zerolinecolor="#C8C2B6", tickformat=",")
-    fig1.layout.yaxis = dict(showgrid=False, tickfont=dict(size=11,color="#3D3530"))
-    fig1.layout.margin = dict(l=40,r=80,t=40,b=40)
+    fig1.update_layout(title=dict(text="Raw Count", font=dict(color="#1A1612",size=14,family="Georgia,serif")),x=0)
+    fig1.update_xaxes(showgrid=True, gridcolor="#E8E3DA", zerolinecolor="#C8C2B6", tickformat=",")
+    fig1.update_yaxes(showgrid=False, tickfont=dict(size=11,color="#3D3530"))
+    fig1.update_layout(margin=dict(l=40,r=80,t=40,b=40))
     st.plotly_chart(fig1, use_container_width=True)
 
 with col2:
@@ -242,10 +242,10 @@ with col2:
         hovertemplate="<b>%{y}</b><br>Per 100K: %{x:.1f}<extra></extra>"
     ))
     fig2 = apply_style(fig2, 540)
-    fig2.layout.title = dict(text="Per 100,000 People", font=dict(color="#1A1612",size=14,family="Georgia,serif"),x=0)
-    fig2.layout.xaxis = dict(showgrid=True, gridcolor="#E8E3DA", zerolinecolor="#C8C2B6")
-    fig2.layout.yaxis = dict(showgrid=False, tickfont=dict(size=11,color="#3D3530"))
-    fig2.layout.margin = dict(l=40,r=60,t=40,b=40)
+    fig2.update_layout(title=dict(text="Per 100,000 People", font=dict(color="#1A1612",size=14,family="Georgia,serif")),x=0)
+    fig2.update_xaxes(showgrid=True, gridcolor="#E8E3DA", zerolinecolor="#C8C2B6")
+    fig2.update_yaxes(showgrid=False, tickfont=dict(size=11,color="#3D3530"))
+    fig2.update_layout(margin=dict(l=40,r=60,t=40,b=40))
     st.plotly_chart(fig2, use_container_width=True)
 
 # METRO AREAS
@@ -274,11 +274,11 @@ fig_m = go.Figure(go.Bar(
     hovertemplate="<b>%{customdata}</b><br>Patents: %{x:,}<extra></extra>"
 ))
 fig_m = apply_style(fig_m, 480)
-fig_m.layout.xaxis = dict(showgrid=True, gridcolor="#E8E3DA", zerolinecolor="#C8C2B6",
+fig_m.update_xaxes(showgrid=True, gridcolor="#E8E3DA", zerolinecolor="#C8C2B6",
                            tickformat=",", title="Patent Grants 2015",
                            titlefont=dict(color="#7A7268"))
-fig_m.layout.yaxis = dict(showgrid=False, tickfont=dict(size=11,color="#3D3530"))
-fig_m.layout.margin = dict(l=10,r=90,t=10,b=50)
+fig_m.update_yaxes(showgrid=False, tickfont=dict(size=11,color="#3D3530"))
+fig_m.update_layout(margin=dict(l=10,r=90,t=10,b=50))
 st.plotly_chart(fig_m, use_container_width=True)
 
 # KEY NUMBERS
